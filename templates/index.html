@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Indício</title>
+<link rel="stylesheet" href="/static/css/style.css"/>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1v-10.5z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8.5 8.5 0 0 1-8.5 8.5H5l-3 3V12A8.5 8.5 0 1 1 21 12z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V6"/><path d="m7 10 5-5 5 5"/><path d="M4 20h16"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v12"/><path d="m7 12 5 5 5-5"/><path d="M4 20h16"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="m21 16-5-5-4 4-2-2-5 5"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 8h.01"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 6 9 12l6 6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12"/><path d="M18 6 6 18"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20V8"/></symbol>
+  <symbol id="i-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3"/><path d="M12 18v3"/><path d="M3 12h3"/><path d="M18 12h3"/></symbol>
+  <symbol id="i-dash" viewBox="0 0 24 24"><path d="M4 4h7v7H4z"/><path d="M13 4h7v4h-7z"/><path d="M13 10h7v10h-7z"/><path d="M4 13h7v7H4z"/></symbol>
+</svg>
+
+<div id="app" data-view="home">
+
+  <section id="view-home" class="view">
+    <div class="home-wrap">
+      <div class="home-logo">Indício</div>
+      <p class="home-tagline">Exame de evidências em conversas</p>
+      <div id="home-case" class="home-case">Verificando caso…</div>
+      <div class="home-cards">
+        <button class="home-card" data-go="chat" id="card-chat" disabled>
+          <div class="hc-icon"><svg class="icon"><use href="#i-chat"/></svg></div>
+          <h3>Conversas</h3>
+          <p>Threads, prévia de mídia e exportação de evidências</p>
+        </button>
+        <button class="home-card" data-go="analysis" id="card-analysis" disabled>
+          <div class="hc-icon"><svg class="icon"><use href="#i-search"/></svg></div>
+          <h3>Análise</h3>
+          <p>Timeline, nuvem lexical, galeria e busca global</p>
+        </button>
+        <button class="home-card" data-go="upload" id="card-upload">
+          <div class="hc-icon"><svg class="icon"><use href="#i-upload"/></svg></div>
+          <h3>Carregar caso</h3>
+          <p>Envie um ZIP com bancos e arquivos de mídia</p>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-upload" class="view hidden">
+    <header class="topbar">
+      <button class="btn-text" data-go="home"><svg class="icon icon-sm"><use href="#i-back"/></svg> Início</button>
+      <h2>Carregar caso</h2>
+    </header>
+    <div class="upload-wrap">
+      <div class="upload-box" id="dropzone">
+        <p class="upload-title">Arraste um arquivo <strong>.zip</strong> ou clique para selecionar</p>
+        <p class="upload-hint">O ZIP deve conter <code>ChatStorage*.sqlite</code>, opcionalmente <code>Contacts*.sqlite</code> e pasta <code>Media/</code></p>
+        <input type="file" id="file-input" accept=".zip,application/zip" hidden/>
+        <button class="btn-primary" id="btn-pick">Selecionar ZIP</button>
+      </div>
+      <div id="upload-status" class="upload-status"></div>
+      <p class="upload-alt">Ou use o caso de demonstração no servidor</p>
+      <button class="btn-secondary" id="btn-default-case">Ativar caso padrão</button>
+    </div>
+  </section>
+
+  <section id="view-chat" class="view hidden">
+    <div class="chat-layout">
+      <aside class="sidebar">
+        <header class="sidebar-header">
+          <button class="btn-text" data-go="home" title="Início"><svg class="icon"><use href="#i-back"/></svg></button>
+          <div><h1>Conversas</h1><p class="sub" id="chat-case-name"></p></div>
+        </header>
+        <div class="search-box"><input type="text" id="chat-search" placeholder="Filtrar conversas…"/></div>
+        <div id="chat-list" class="chat-list"></div>
+      </aside>
+      <main class="main">
+        <div id="empty-state" class="empty-state">
+          <svg class="icon icon-lg" style="color:var(--text-3)"><use href="#i-chat"/></svg>
+          <h2>Selecione uma conversa</h2>
+          <p>Mensagens e mídia aparecerão aqui</p>
+        </div>
+        <div id="conversation" class="conversation hidden">
+          <header class="conv-header">
+            <div class="avatar" id="conv-avatar">?</div>
+            <div class="conv-info">
+              <h2 id="conv-name">-</h2>
+              <p id="conv-subtitle" class="sub"></p>
+            </div>
+            <input type="text" id="msg-search" placeholder="Buscar…"/>
+            <button class="btn-chip" id="btn-export-txt" title="Exportar TXT"><svg class="icon icon-sm"><use href="#i-file"/></svg> TXT</button>
+            <button class="btn-chip" id="btn-export-html" title="Exportar HTML"><svg class="icon icon-sm"><use href="#i-file"/></svg> HTML</button>
+            <button class="btn-chip" id="btn-info" title="Informações"><svg class="icon icon-sm"><use href="#i-info"/></svg></button>
+          </header>
+          <div id="messages" class="messages"></div>
+          <div id="load-more-bar" class="load-more hidden"><button id="btn-load-more">Mensagens anteriores</button></div>
+        </div>
+      </main>
+      <aside id="info-panel" class="info-panel hidden">
+        <header class="sidebar-header">
+          <h3 style="font-size:14px;font-weight:600">Detalhes</h3>
+          <button class="btn-text" id="btn-close-info"><svg class="icon icon-sm"><use href="#i-x"/></svg></button>
+        </header>
+        <div id="info-content" class="info-content"></div>
+      </aside>
+    </div>
+  </section>
+
+  <section id="view-analysis" class="view hidden">
+    <div class="analysis-layout">
+      <aside class="sidebar">
+        <header class="sidebar-header">
+          <button class="btn-text" data-go="home"><svg class="icon"><use href="#i-back"/></svg></button>
+          <div><h1>Análise</h1><p class="sub" id="an-case-name"></p></div>
+        </header>
+        <nav class="an-nav">
+          <button class="anav active" data-panel="dashboard"><svg class="icon icon-sm"><use href="#i-dash"/></svg> Dashboard</button>
+          <button class="anav" data-panel="contacts"><svg class="icon icon-sm"><use href="#i-users"/></svg> Contatos</button>
+          <button class="anav" data-panel="search"><svg class="icon icon-sm"><use href="#i-search"/></svg> Busca global</button>
+          <button class="anav" data-panel="gallery"><svg class="icon icon-sm"><use href="#i-grid"/></svg> Galeria</button>
+        </nav>
+        <div id="contact-picker" class="contact-picker hidden">
+          <input type="text" id="contact-filter" placeholder="Filtrar contato…"/>
+          <div id="contact-list" class="contact-list"></div>
+        </div>
+      </aside>
+      <main class="main an-main">
+        <div id="apanel-dashboard" class="apanel">
+          <h2>Dashboard do caso</h2>
+          <p class="sub">Visão geral da evidência carregada</p>
+          <div id="dash-stats" class="stats-grid"></div>
+          <div class="chart-card">
+            <h3>Atividade por hora - caso inteiro</h3>
+            <div id="chart-hourly-global" class="ibar"></div>
+          </div>
+        </div>
+        <div id="apanel-contacts" class="apanel hidden">
+          <div id="contact-detail" class="hidden">
+            <button class="btn-text" id="btn-back-contacts"><svg class="icon icon-sm"><use href="#i-back"/></svg> Todos os contatos</button>
+            <h2 id="cd-name">-</h2>
+            <p class="sub" id="cd-meta"></p>
+            <div class="cd-tabs">
+              <button class="cd-tab active" data-tab="hourly">Timeline horária</button>
+              <button class="cd-tab" data-tab="daily">Timeline diária</button>
+              <button class="cd-tab" data-tab="words">Nuvem de palavras</button>
+              <button class="cd-tab" data-tab="openchat">Abrir conversa</button>
+            </div>
+            <div id="cd-hourly" class="cd-pane">
+              <div class="chart-card">
+                <h3>Mensagens por hora · clique para abrir no horário</h3>
+                <div id="chart-hourly-contact" class="ibar"></div>
+              </div>
+              <div id="hourly-table"></div>
+            </div>
+            <div id="cd-daily" class="cd-pane hidden">
+              <div class="chart-card">
+                <h3>Mensagens por dia</h3>
+                <div id="chart-daily-contact" class="ibar"></div>
+              </div>
+            </div>
+            <div id="cd-words" class="cd-pane hidden"><div id="word-cloud" class="word-cloud"></div></div>
+          </div>
+          <div id="contacts-overview">
+            <h2>Todos os contatos</h2>
+            <p class="sub">Clique em um contato para timeline e nuvem de palavras</p>
+            <div id="all-contacts" class="all-contacts"></div>
+          </div>
+        </div>
+        <div id="apanel-search" class="apanel hidden">
+          <h2>Busca global</h2>
+          <p class="sub">Pesquisa em todas as mensagens de texto</p>
+          <input type="text" id="global-search" class="input-wide" placeholder="Palavra-chave…"/>
+          <div id="global-results"></div>
+        </div>
+        <div id="apanel-gallery" class="apanel hidden">
+          <h2>Galeria de mídia</h2>
+          <p class="sub">Filtre pelo nome do chat. Só arquivos presentes no caso aparecem.</p>
+          <div class="gallery-filters">
+            <button class="gfilter active" data-type="all">Todos</button>
+            <button class="gfilter" data-type="image">Imagens</button>
+            <button class="gfilter" data-type="audio">Áudios</button>
+            <input type="text" id="gallery-search" placeholder="Nome do chat…"/>
+          </div>
+          <div id="gallery-grid" class="gallery-grid"></div>
+          <div id="gallery-more" class="load-more hidden"><button id="btn-gallery-more">Carregar mais</button></div>
+        </div>
+      </main>
+    </div>
+  </section>
+</div>
+
+<div id="lightbox" class="lightbox hidden">
+  <button class="lightbox-close" id="lightbox-close" aria-label="Fechar">×</button>
+  <a id="lightbox-dl" class="lightbox-dl" download>Baixar</a>
+  <img id="lightbox-img" src="" alt=""/>
+</div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
