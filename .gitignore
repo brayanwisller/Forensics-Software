@@ -1,6 +1,7 @@
 *.env
 *.json
 *.db
+*.sqlite
 venv/
 .venv/
 resources/
