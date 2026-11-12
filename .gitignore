@@ -1,0 +1,7 @@
+*.env
+*.json
+*.db
+venv/
+.venv/
+resources/
+cases/
