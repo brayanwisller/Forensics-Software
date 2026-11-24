@@ -24,6 +24,7 @@
   <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20V8"/></symbol>
   <symbol id="i-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3"/><path d="M12 18v3"/><path d="M3 12h3"/><path d="M18 12h3"/></symbol>
   <symbol id="i-dash" viewBox="0 0 24 24"><path d="M4 4h7v7H4z"/><path d="M13 4h7v4h-7z"/><path d="M13 10h7v10h-7z"/><path d="M4 13h7v7H4z"/></symbol>
+  <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></symbol>
 </svg>
 
 <div id="app" data-view="home">
@@ -44,6 +45,11 @@
           <h3>Análise</h3>
           <p>Timeline, nuvem lexical, galeria e busca global</p>
         </button>
+        <button class="home-card" data-go="db" id="card-db" disabled>
+          <div class="hc-icon"><svg class="icon"><use href="#i-db"/></svg></div>
+          <h3>Bancos .db</h3>
+          <p>Explore tabelas SQLite do caso (somente leitura)</p>
+        </button>
         <button class="home-card" data-go="upload" id="card-upload">
           <div class="hc-icon"><svg class="icon"><use href="#i-upload"/></svg></div>
           <h3>Carregar caso</h3>
@@ -61,7 +67,7 @@
     <div class="upload-wrap">
       <div class="upload-box" id="dropzone">
         <p class="upload-title">Arraste um arquivo <strong>.zip</strong> ou clique para selecionar</p>
-        <p class="upload-hint">O ZIP deve conter <code>ChatStorage*.sqlite</code>, opcionalmente <code>Contacts*.sqlite</code> e pasta <code>Media/</code></p>
+        <p class="upload-hint">Aceita <strong>iOS</strong> (<code>ChatStorage*.sqlite</code>) ou <strong>Android</strong> (<code>msgstore*.db</code> + <code>wa*.db</code>). Opcional: pasta <code>Media/</code>.</p>
         <input type="file" id="file-input" accept=".zip,application/zip" hidden/>
         <button class="btn-primary" id="btn-pick">Selecionar ZIP</button>
       </div>
@@ -78,7 +84,7 @@
           <button class="btn-text" data-go="home" title="Início"><svg class="icon"><use href="#i-back"/></svg></button>
           <div><h1>Conversas</h1><p class="sub" id="chat-case-name"></p></div>
         </header>
-        <div class="search-box"><input type="text" id="chat-search" placeholder="Filtrar conversas…"/></div>
+        <div class="search-box"><input type="text" id="chat-search" placeholder="Nome ou telefone…"/></div>
         <div id="chat-list" class="chat-list"></div>
       </aside>
       <main class="main">
@@ -127,7 +133,7 @@
           <button class="anav" data-panel="gallery"><svg class="icon icon-sm"><use href="#i-grid"/></svg> Galeria</button>
         </nav>
         <div id="contact-picker" class="contact-picker hidden">
-          <input type="text" id="contact-filter" placeholder="Filtrar contato…"/>
+          <input type="text" id="contact-filter" placeholder="Nome ou telefone…"/>
           <div id="contact-list" class="contact-list"></div>
         </div>
       </aside>
@@ -190,6 +196,51 @@
           </div>
           <div id="gallery-grid" class="gallery-grid"></div>
           <div id="gallery-more" class="load-more hidden"><button id="btn-gallery-more">Carregar mais</button></div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <section id="view-db" class="view hidden">
+    <div class="db-layout">
+      <aside class="sidebar db-sidebar">
+        <header class="sidebar-header">
+          <button class="btn-text" data-go="home"><svg class="icon"><use href="#i-back"/></svg></button>
+          <div><h1>Bancos</h1><p class="sub" id="db-case-name"></p></div>
+        </header>
+        <div class="search-box"><input type="text" id="db-file-filter" placeholder="Filtrar arquivos…"/></div>
+        <div id="db-file-list" class="db-file-list"></div>
+        <div class="db-tables-head">Tabelas</div>
+        <div id="db-table-list" class="db-table-list"></div>
+      </aside>
+      <main class="main db-main">
+        <div id="db-empty" class="empty-state">
+          <svg class="icon icon-lg" style="color:var(--faint)"><use href="#i-db"/></svg>
+          <h2>Selecione um banco e uma tabela</h2>
+          <p>Visualização somente leitura, no estilo de um explorador SQL</p>
+        </div>
+        <div id="db-workbench" class="db-workbench hidden">
+          <header class="db-toolbar">
+            <div class="db-toolbar-title">
+              <strong id="db-current-table">—</strong>
+              <span class="sub" id="db-row-meta"></span>
+            </div>
+            <input type="text" id="db-row-search" placeholder="Filtrar linhas…"/>
+            <button class="btn-chip" id="btn-db-schema">Esquema</button>
+            <button class="btn-chip" id="btn-db-refresh">Atualizar</button>
+          </header>
+          <div id="db-schema-panel" class="db-schema-panel hidden"></div>
+          <div class="db-grid-wrap">
+            <table class="db-grid" id="db-grid">
+              <thead id="db-grid-head"></thead>
+              <tbody id="db-grid-body"></tbody>
+            </table>
+          </div>
+          <footer class="db-pager">
+            <button class="btn-secondary" id="btn-db-prev" disabled>Anterior</button>
+            <span id="db-page-info" class="sub"></span>
+            <button class="btn-secondary" id="btn-db-next" disabled>Próxima</button>
+          </footer>
         </div>
       </main>
     </div>
