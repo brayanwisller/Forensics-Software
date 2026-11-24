@@ -1,4 +1,3 @@
-/* Indício — interface */
 :root {
   --bg: #0b0c0f;
   --surface: #12131a;
@@ -88,7 +87,7 @@ a { color: var(--accent); }
 }
 .home-cards {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 210px));
+  grid-template-columns: repeat(4, minmax(0, 200px));
   gap: 12px;
 }
 .home-card {
@@ -861,8 +860,131 @@ a { color: var(--accent); }
   font-size: 12.5px;
 }
 
+
+/* —— Database browser —— */
+.db-layout { display: flex; height: 100%; min-height: 0; }
+.db-sidebar { width: 280px; min-width: 240px; }
+.db-file-list, .db-table-list { overflow-y: auto; }
+.db-file-list { max-height: 32%; border-bottom: 1px solid var(--line); }
+.db-tables-head {
+  padding: 8px 14px 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--faint);
+  font-weight: 600;
+}
+.db-file-item, .db-table-item {
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  border-bottom: 1px solid var(--line-soft);
+  color: var(--muted);
+}
+.db-file-item:hover, .db-table-item:hover { background: var(--hover); color: var(--text); }
+.db-file-item.active, .db-table-item.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.db-file-item .db-size { display: block; font-size: 11px; color: var(--faint); margin-top: 2px; }
+.db-table-item .db-ttype {
+  font-size: 10px;
+  color: var(--faint);
+  margin-left: 6px;
+  text-transform: uppercase;
+}
+.db-main { background: var(--bg); }
+.db-workbench { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.db-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.db-toolbar-title { flex: 1; min-width: 0; }
+.db-toolbar-title strong { display: block; font-size: 14px; }
+#db-row-search {
+  width: 180px;
+  padding: 7px 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--text);
+  font-size: 13px;
+}
+.db-schema-panel {
+  padding: 12px 14px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  font-size: 12.5px;
+  max-height: 180px;
+  overflow: auto;
+}
+.db-schema-panel table { width: 100%; border-collapse: collapse; }
+.db-schema-panel th, .db-schema-panel td {
+  text-align: left;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--line-soft);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.db-schema-panel th { color: var(--faint); font-weight: 500; }
+.db-grid-wrap {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+.db-grid {
+  border-collapse: collapse;
+  width: max-content;
+  min-width: 100%;
+  font-size: 12.5px;
+  font-family: var(--mono);
+}
+.db-grid th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  color: var(--muted);
+  font-weight: 600;
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line-soft);
+  white-space: nowrap;
+  z-index: 1;
+}
+.db-grid td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line-soft);
+  border-right: 1px solid var(--line-soft);
+  color: var(--text);
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: top;
+}
+.db-grid tr:hover td { background: var(--hover); }
+.db-grid td.null { color: var(--faint); font-style: italic; }
+.db-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 10px;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
 @media (max-width: 860px) {
   .home-cards { grid-template-columns: 1fr; width: min(280px, 100%); }
+  .db-layout { flex-direction: column; }
+  .db-sidebar { width: 100%; max-height: 40vh; }
   .sidebar { width: 100%; }
   .chat-layout .main { display: none; }
   #app.show-chat .sidebar { display: none; }
