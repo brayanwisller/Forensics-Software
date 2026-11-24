@@ -1,6 +1,3 @@
-/**
- * Indício - frontend
- */
 (function () {
   "use strict";
   const state = {
@@ -9,6 +6,8 @@
     messages: [], offset: 0, limit: 80, msgQ: "", focusId: null,
     selectedContact: null, galleryType: "all", galleryOffset: 0,
     hourlyFocusIds: [],
+    dbId: null, dbTable: null, dbOffset: 0, dbLimit: 50, dbRowQ: "",
+    dbFiles: [],
   };
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => document.querySelectorAll(s);
@@ -80,11 +79,12 @@
     app.classList.remove("show-chat");
     if (view === "chat") { loadChats(); $("#chat-case-name").textContent = state.caseName || ""; }
     if (view === "analysis") { $("#an-case-name").textContent = state.caseName || ""; loadAnalysisPanel("dashboard"); }
+    if (view === "db") { $("#db-case-name").textContent = state.caseName || ""; loadDbFiles(); }
     if (view === "home") refreshCaseStatus();
   }
   $$("[data-go]").forEach((b) => b.addEventListener("click", () => {
     const v = b.dataset.go;
-    if ((v === "chat" || v === "analysis") && !state.caseReady) return;
+    if ((v === "chat" || v === "analysis" || v === "db") && !state.caseReady) return;
     go(v);
   }));
 
@@ -99,11 +99,13 @@
         box.classList.add("ready");
         $("#card-chat").disabled = false;
         $("#card-analysis").disabled = false;
+        if ($("#card-db")) $("#card-db").disabled = false;
       } else {
         box.textContent = "Nenhum caso carregado - use Carregar caso";
         box.classList.remove("ready");
         $("#card-chat").disabled = true;
         $("#card-analysis").disabled = true;
+        if ($("#card-db")) $("#card-db").disabled = true;
       }
     } catch (e) {
       $("#home-case").textContent = "Erro ao verificar caso";
@@ -359,17 +361,21 @@
     renderIBar($("#chart-hourly-global"), h.labels, h.counts);
   }
 
-  async function loadAllContacts() {
+  async function loadAllContacts(q) {
     $("#contacts-overview").classList.remove("hidden");
     $("#contact-detail").classList.add("hidden");
     state.selectedContact = null;
-    const data = await api("/api/contacts");
+    const qs = (q !== undefined && q !== null) ? q : ($("#contact-filter")?.value || "").trim();
+    const data = await api("/api/contacts?q=" + encodeURIComponent(qs));
     const max = data.contacts[0]?.message_count || 1;
     const render = (list) => {
       $("#all-contacts").innerHTML = list.map((c) => `
         <div class="ac-row" data-id="${c.id}">
           <div class="chat-avatar ${c.is_group ? "group" : ""}" style="width:36px;height:36px;font-size:12px">${initials(c.name)}</div>
-          <div style="width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500">${esc(c.name)}</div>
+          <div style="width:170px;min-width:0">
+            <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500">${esc(c.name)}</div>
+            <div style="font-size:11px;color:var(--faint);overflow:hidden;text-overflow:ellipsis">${esc(c.phone || c.jid || "")}</div>
+          </div>
           <div class="ac-bar-wrap"><div class="ac-bar" style="width:${(c.message_count / max) * 100}%"></div></div>
           <div class="ac-count">${c.message_count}</div>
         </div>`).join("");
@@ -390,10 +396,13 @@
     state._allContacts = data.contacts;
     state._renderContacts = render;
   }
+  let _cfTimer;
   $("#contact-filter")?.addEventListener("input", () => {
-    const q = $("#contact-filter").value.trim().toLowerCase();
-    const list = (state._allContacts || []).filter((c) => !q || (c.name || "").toLowerCase().includes(q));
-    if (state._renderContacts) state._renderContacts(list);
+    clearTimeout(_cfTimer);
+    _cfTimer = setTimeout(() => {
+      const q = $("#contact-filter").value.trim();
+      loadAllContacts(q);
+    }, 280);
   });
 
   async function selectContact(id, info) {
@@ -588,6 +597,138 @@
   });
   $("#btn-close-info")?.addEventListener("click", () => $("#info-panel").classList.add("hidden"));
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeLightbox(); });
+
+
+  /* —— SQLite browser —— */
+  async function loadDbFiles() {
+    const data = await api("/api/db/list");
+    state.dbFiles = data.databases || [];
+    renderDbFiles();
+    if (!state.dbId && state.dbFiles.length) {
+      selectDb(state.dbFiles[0].id);
+    } else if (state.dbId) {
+      loadDbTables(state.dbId);
+    }
+  }
+  function renderDbFiles(filter) {
+    const q = (filter || $("#db-file-filter")?.value || "").trim().toLowerCase();
+    const list = state.dbFiles.filter((f) => !q || f.name.toLowerCase().includes(q) || f.rel.toLowerCase().includes(q));
+    $("#db-file-list").innerHTML = list.map((f) => `
+      <div class="db-file-item ${f.id === state.dbId ? "active" : ""}" data-id="${esc(f.id)}">
+        ${esc(f.name)}
+        <span class="db-size">${esc(f.rel)} · ${esc(f.size_human)}</span>
+      </div>`).join("") || '<div style="padding:16px;color:var(--faint);font-size:13px">Nenhum .sqlite/.db no caso</div>';
+    $("#db-file-list").querySelectorAll(".db-file-item").forEach((el) => {
+      el.addEventListener("click", () => selectDb(el.dataset.id));
+    });
+  }
+  $("#db-file-filter")?.addEventListener("input", () => renderDbFiles());
+
+  async function selectDb(id) {
+    state.dbId = id;
+    state.dbTable = null;
+    state.dbOffset = 0;
+    renderDbFiles();
+    $("#db-workbench").classList.add("hidden");
+    $("#db-empty").classList.remove("hidden");
+    $("#db-table-list").innerHTML = '<div style="padding:12px;color:var(--faint)">Carregando…</div>';
+    await loadDbTables(id);
+  }
+
+  async function loadDbTables(id) {
+    const data = await api("/api/db/tables?db=" + encodeURIComponent(id));
+    if (data.error) {
+      $("#db-table-list").innerHTML = `<div style="padding:12px;color:var(--danger)">${esc(data.error)}</div>`;
+      return;
+    }
+    $("#db-table-list").innerHTML = (data.tables || []).map((t) => `
+      <div class="db-table-item ${t.name === state.dbTable ? "active" : ""}" data-name="${esc(t.name)}">
+        ${esc(t.name)}<span class="db-ttype">${esc(t.type)}</span>
+      </div>`).join("") || '<div style="padding:12px;color:var(--faint)">Sem tabelas</div>';
+    $("#db-table-list").querySelectorAll(".db-table-item").forEach((el) => {
+      el.addEventListener("click", () => selectTable(el.dataset.name));
+    });
+  }
+
+  async function selectTable(name) {
+    state.dbTable = name;
+    state.dbOffset = 0;
+    state.dbRowQ = "";
+    if ($("#db-row-search")) $("#db-row-search").value = "";
+    $("#db-schema-panel").classList.add("hidden");
+    loadDbTables(state.dbId);
+    await loadDbRows();
+  }
+
+  async function loadDbRows() {
+    if (!state.dbId || !state.dbTable) return;
+    $("#db-empty").classList.add("hidden");
+    $("#db-workbench").classList.remove("hidden");
+    $("#db-current-table").textContent = state.dbTable;
+    $("#db-grid-body").innerHTML = '<tr><td style="padding:20px;color:var(--faint)">Carregando…</td></tr>';
+    const url = `/api/db/rows?db=${encodeURIComponent(state.dbId)}&table=${encodeURIComponent(state.dbTable)}&limit=${state.dbLimit}&offset=${state.dbOffset}&q=${encodeURIComponent(state.dbRowQ)}`;
+    const data = await api(url);
+    if (data.error) {
+      $("#db-grid-head").innerHTML = "";
+      $("#db-grid-body").innerHTML = `<tr><td style="color:var(--danger);padding:16px">${esc(data.error)}</td></tr>`;
+      return;
+    }
+    const cols = data.columns || [];
+    $("#db-grid-head").innerHTML = "<tr>" + cols.map((c) => `<th>${esc(c)}</th>`).join("") + "</tr>";
+    $("#db-grid-body").innerHTML = (data.rows || []).map((row) => {
+      return "<tr>" + cols.map((c) => {
+        const v = row[c];
+        if (v === null || v === undefined) return '<td class="null">NULL</td>';
+        return `<td title="${esc(String(v))}">${esc(String(v))}</td>`;
+      }).join("") + "</tr>";
+    }).join("") || `<tr><td colspan="${cols.length}" style="padding:16px;color:var(--faint)">Sem linhas</td></tr>`;
+    const from = data.total ? data.offset + 1 : 0;
+    const to = Math.min(data.offset + data.limit, data.total);
+    $("#db-row-meta").textContent = `${data.total.toLocaleString("pt-BR")} linhas`;
+    $("#db-page-info").textContent = data.total ? `${from}–${to} de ${data.total.toLocaleString("pt-BR")}` : "0 linhas";
+    $("#btn-db-prev").disabled = data.offset <= 0;
+    $("#btn-db-next").disabled = !data.has_more;
+  }
+
+  $("#btn-db-prev")?.addEventListener("click", () => {
+    state.dbOffset = Math.max(0, state.dbOffset - state.dbLimit);
+    loadDbRows();
+  });
+  $("#btn-db-next")?.addEventListener("click", () => {
+    state.dbOffset += state.dbLimit;
+    loadDbRows();
+  });
+  let _dbSearchT;
+  $("#db-row-search")?.addEventListener("input", () => {
+    clearTimeout(_dbSearchT);
+    _dbSearchT = setTimeout(() => {
+      state.dbRowQ = $("#db-row-search").value.trim();
+      state.dbOffset = 0;
+      loadDbRows();
+    }, 300);
+  });
+  $("#btn-db-refresh")?.addEventListener("click", () => loadDbRows());
+  $("#btn-db-schema")?.addEventListener("click", async () => {
+    if (!state.dbId || !state.dbTable) return;
+    const panel = $("#db-schema-panel");
+    if (!panel.classList.contains("hidden") && panel.dataset.table === state.dbTable) {
+      panel.classList.add("hidden");
+      return;
+    }
+    const data = await api(`/api/db/schema?db=${encodeURIComponent(state.dbId)}&table=${encodeURIComponent(state.dbTable)}`);
+    if (data.error) {
+      panel.innerHTML = `<span style="color:var(--danger)">${esc(data.error)}</span>`;
+    } else {
+      panel.innerHTML = `<div class="sub" style="margin-bottom:8px">${data.row_count?.toLocaleString("pt-BR")} linhas · ${data.columns?.length || 0} colunas</div>
+        <table><thead><tr><th>#</th><th>Coluna</th><th>Tipo</th><th>PK</th><th>NOT NULL</th><th>Default</th></tr></thead>
+        <tbody>${(data.columns||[]).map((c)=>`<tr>
+          <td>${c.cid}</td><td>${esc(c.name)}</td><td>${esc(c.type||"—")}</td>
+          <td>${c.pk?"✓":""}</td><td>${c.notnull?"✓":""}</td><td>${esc(c.default==null?"":String(c.default))}</td>
+        </tr>`).join("")}</tbody></table>`;
+    }
+    panel.dataset.table = state.dbTable;
+    panel.classList.remove("hidden");
+  });
 
   refreshCaseStatus();
 })();
